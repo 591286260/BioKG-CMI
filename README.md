@@ -11,10 +11,7 @@ numpy 1.24.4
 gensim 4.3.1  
 keras 2.4.3  
 
-Usage:
-
-(A) Subcellular localization generation of negative samples and construction of biological knowledge graphs. 
-
-(B) Learning multi-source signatures of circRNAs and miRNAs. 
-
+Usage:  
+(A) Subcellular localization generation of negative samples and construction of biological knowledge graphs.  
+(B) Learning multi-source signatures of circRNAs and miRNAs.  
 (C) Feature fusion and prediction of CMIs using Adaboost.
