@@ -1,0 +1,16 @@
+{%- if show_headings %}
+{{- basename | e | heading }}
+
+{% endif -%}
+
+.. automodapi:: {{ qualname }}
+   :inherited-members:
+   :no-heading:
+   :no-main-docstr:
+
+.. automodule:: {{ qualname }}
+   :members:
+   :inherited-members:
+   :show-inheritance:
+
+

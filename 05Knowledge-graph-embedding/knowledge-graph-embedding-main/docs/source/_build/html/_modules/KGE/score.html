@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KGE.score &mdash; Knowledge Graph Embedding 1.0.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Knowledge Graph Embedding
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Get Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../kge_intro.html">What's Knowledge Graph Embedding?</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Models</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../src/KGE.models.translating_based.html">Translating Based Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../src/KGE.models.semantic_based.html">Semantic Based Models</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Loss</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../src/KGE.loss.html">Loss Function</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Score</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../src/KGE.score.html">Score Function</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Constraint</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../src/KGE.constraint.html">Contraint</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Negative Sampling</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../src/KGE.ns_strategy.html">Negative Sampling Strategy</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Knowledge Graph Embedding</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>KGE.score</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for KGE.score</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Different score functions that you can choose when training translating-based models.</span>
+
+<span class="sd">Score functions measure the distance bewtween :math:`translation` and :math:`predicate`</span>
+<span class="sd">in translating-based models, for example,</span>
+<span class="sd">`TransE &lt;http://papers.nips.cc/paper/5071-translating-embeddings-for-modeling-multi-relational-data&gt;`_</span>
+<span class="sd">uses :py:mod:`L1 or L2-distance &lt;LpDistance&gt;`,</span>
+<span class="sd">`TransH &lt;https://ojs.aaai.org/index.php/AAAI/article/view/8870&gt;`_,</span>
+<span class="sd">`TransR &lt;https://www.aaai.org/ocs/index.php/AAAI/AAAI15/paper/viewFile/9571/9523/&gt;`_,</span>
+<span class="sd">`TransD &lt;https://aclanthology.org/P15-1067.pdf&gt;`_ use :py:mod:`squared L2-distance &lt;LpDistancePow&gt;`.</span>
+
+<span class="sd">You can change the score function to try any possibility in a very easy way:</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">    from KGE.models.translating_based.TransE import TransE</span>
+<span class="sd">    from KGE.score import LpDistancePow</span>
+
+<span class="sd">    model = TransE(</span>
+<span class="sd">        embedding_params={&quot;embedding_size&quot;: 10},</span>
+<span class="sd">        negative_ratio=10,</span>
+<span class="sd">        corrupt_side=&quot;h+t&quot;,</span>
+<span class="sd">        score_fn=LpDistancePow(p=2) # specifying score function you want</span>
+<span class="sd">    )</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<div class="viewcode-block" id="Score"><a class="viewcode-back" href="../../src/KGE.score.html#KGE.score.Score">[docs]</a><span class="k">class</span> <span class="nc">Score</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;A base module for score.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Score.__init__"><a class="viewcode-back" href="../../src/KGE.score.html#KGE.score.Score.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initialize score.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;subclass of Score should implement __init__() to init score parameters&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Score.__call__"><a class="viewcode-back" href="../../api/KGE.score.Score.html#KGE.score.Score.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Calculate score.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : tf.Tensor</span>
+<span class="sd">        y : tf.Tensor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;subclass of Score should implement __call__() to calculate score&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="LpDistance"><a class="viewcode-back" href="../../src/KGE.score.html#KGE.score.LpDistance">[docs]</a><span class="k">class</span> <span class="nc">LpDistance</span><span class="p">(</span><span class="n">Score</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An implementation of negative Lp-distance.</span>
+
+<span class="sd">    Score between :math:`\\textbf{x}` and :math:`\\textbf{y}` is defined as</span>
+<span class="sd">    :math:`- \left\| \\textbf{x} - \\textbf{y} \\right\|_p`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LpDistance.__init__"><a class="viewcode-back" href="../../src/KGE.score.html#KGE.score.LpDistance.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">p</span></div>
+
+<div class="viewcode-block" id="LpDistance.__call__"><a class="viewcode-back" href="../../api/KGE.score.LpDistance.html#KGE.score.LpDistance.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_max</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">tf</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">clip_by_value</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">1e-9</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">),</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="LpDistancePow"><a class="viewcode-back" href="../../src/KGE.score.html#KGE.score.LpDistancePow">[docs]</a><span class="k">class</span> <span class="nc">LpDistancePow</span><span class="p">(</span><span class="n">Score</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An implementation of negative squared Lp-distance.</span>
+
+<span class="sd">    Score between :math:`\\textbf{x}` and :math:`\\textbf{y}` is defined as</span>
+<span class="sd">    :math:`- \left\| \\textbf{x} - \\textbf{y} \\right\|_p^2`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="LpDistancePow.__init__"><a class="viewcode-back" href="../../src/KGE.score.html#KGE.score.LpDistancePow.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">p</span></div>
+
+<div class="viewcode-block" id="LpDistancePow.__call__"><a class="viewcode-back" href="../../api/KGE.score.LpDistancePow.html#KGE.score.LpDistancePow.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">LpDistance</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">)(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span></div></div>
+        
+<div class="viewcode-block" id="Dot"><a class="viewcode-back" href="../../src/KGE.score.html#KGE.score.Dot">[docs]</a><span class="k">class</span> <span class="nc">Dot</span><span class="p">(</span><span class="n">Score</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An implementation of dot product.</span>
+
+<span class="sd">    Score between :math:`\\textbf{x}` and :math:`\\textbf{y}` is defined as</span>
+<span class="sd">    :math:`\\textbf{x} \cdot \\textbf{y}`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Dot.__init__"><a class="viewcode-back" href="../../src/KGE.score.html#KGE.score.Dot.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Dot.__call__"><a class="viewcode-back" href="../../api/KGE.score.Dot.html#KGE.score.Dot.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">tf</span><span class="o">.</span><span class="n">reduce_sum</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Melissa Kuo.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
